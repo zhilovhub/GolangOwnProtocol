@@ -1,47 +1,35 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"net"
-	"time"
 )
 
 func main() {
 	// Server
-	go func() {
-		listener, err := net.Listen("tcp", ":8080")
-		if err != nil {
-			fmt.Printf("Error while listening: %v", err)
-			return
-		}
-		defer listener.Close()
-
-		for {
-			conn, err := listener.Accept()
-			fmt.Print(1)
-			if err != nil {
-				fmt.Printf("Error while accepting connection: %v", err)
-				continue
-			}
-			handleConnection(conn)
-		}
-	}()
-
-	// Client
-	conn, err := net.Dial("tcp", "localhost:8080")
+	listener, err := net.Listen("tcp", ":8080")
 	if err != nil {
-		fmt.Printf("Error connectiong: %v", err)
+		fmt.Printf("Error while listening: %v", err)
 		return
 	}
-	defer conn.Close()
+	defer listener.Close()
 
-	conn.Write([]byte("Привте"))
-	conn.Write([]byte("Как там дела?"))
-	time.Sleep(time.Second * 10)
-}
-
-func handleConnection(conn net.Conn) {
-	buffer := make([]byte, 1024)
-	conn.Read(buffer)
-	fmt.Println("Got:", string(buffer))
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			fmt.Printf("Error while accepting connection: %v", err)
+			continue
+		}
+		go func(conn net.Conn) {
+			var buffer bytes.Buffer
+			_, err := io.Copy(&buffer, conn)
+			if err != nil {
+				fmt.Printf("Error while reading bytes from connection: %v", err)
+				return
+			}
+			fmt.Printf("Got new message: %s\n", buffer.String())
+		}(conn)
+	}
 }
