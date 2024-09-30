@@ -1,9 +1,8 @@
 package main
 
 import (
-	"bytes"
+	"bufio"
 	"fmt"
-	"io"
 	"net"
 )
 
@@ -19,17 +18,19 @@ func main() {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Printf("Error while accepting connection: %v", err)
+			fmt.Printf("Error while accepting connection: %v\n", err)
 			continue
 		}
 		go func(conn net.Conn) {
-			var buffer bytes.Buffer
-			_, err := io.Copy(&buffer, conn)
-			if err != nil {
-				fmt.Printf("Error while reading bytes from connection: %v", err)
-				return
+			reader := bufio.NewReader(conn)
+			for {
+				bytes, _, err := reader.ReadLine()
+				if err != nil {
+					fmt.Printf("Error while reading bytes from connection: %v\n", err)
+					return
+				}
+				fmt.Printf("Got new message with %d bytes: %s\n", len(bytes), string(bytes))
 			}
-			fmt.Printf("Got new message: %s\n", buffer.String())
 		}(conn)
 	}
 }

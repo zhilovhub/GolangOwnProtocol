@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"time"
 )
 
 func main() {
@@ -15,4 +16,5 @@ func main() {
 	defer conn.Close()
 
 	conn.Write([]byte("Привте"))
+	time.Sleep(time.Second * 2)
 }
