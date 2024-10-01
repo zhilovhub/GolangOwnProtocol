@@ -7,7 +7,10 @@ import (
 
 func main() {
 	iPacket := protocol.CreateIPacket(1, 1)
-	protocol.SetValue(iPacket, 1, int32(2))
+	protocol.SetValue(iPacket, 1, int64(34573457))
+	protocol.SetValue(iPacket, 2, float32(23.43))
+	protocol.SetValue(iPacket, 3, float64(34573457.12))
+	protocol.SetValue(iPacket, 4, true)
 
 	byteArray, err := iPacket.ToPacket()
 	if err != nil {
@@ -19,15 +22,22 @@ func main() {
 		panic(err)
 	}
 
-	var value interface{}
-	value, err = protocol.GetValue[int32](newIPacket, 1)
+	value, err := protocol.GetValue[int64](newIPacket, 1)
 	if err != nil {
 		panic(err)
 	}
-
-	if v, ok := value.(int32); ok {
-		fmt.Println(v)
-	} else {
-		panic(fmt.Errorf("value has another type: %T", v))
+	value1, err := protocol.GetValue[float32](newIPacket, 2)
+	if err != nil {
+		panic(err)
 	}
+	value2, err := protocol.GetValue[float64](newIPacket, 3)
+	if err != nil {
+		panic(err)
+	}
+	value3, err := protocol.GetValue[bool](newIPacket, 4)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(value, value1, value2, value3)
+
 }

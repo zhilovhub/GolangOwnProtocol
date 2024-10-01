@@ -57,6 +57,7 @@ func ParsePacket(b []byte) (*IPacket, error) {
 		fieldId := fieldsBytes[0]
 		fieldSize := fieldsBytes[1]
 
+		fieldsBytes = fieldsBytes[2:]
 		var fieldContents []byte
 		if fieldSize != 0 {
 			fieldContents = fieldsBytes[:fieldSize]
@@ -68,8 +69,9 @@ func ParsePacket(b []byte) (*IPacket, error) {
 			FieldContents: fieldContents,
 		})
 
-		fieldsBytes = fieldsBytes[2+fieldSize:]
+		fieldsBytes = fieldsBytes[fieldSize:]
 	}
+
 	return iPacket, nil
 }
 
