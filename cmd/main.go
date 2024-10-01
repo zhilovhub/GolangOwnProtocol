@@ -2,23 +2,32 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"version1/pkg/protocol"
 )
 
 func main() {
-	iPacket := protocol.CreateIPacket(2, 3)
-	packetBytes, err := iPacket.ToPacket()
+	iPacket := protocol.CreateIPacket(1, 1)
+	protocol.SetValue(iPacket, 1, int32(2))
+
+	byteArray, err := iPacket.ToPacket()
 	if err != nil {
-		log.Fatalf("Error while converting IPacket to bytes: %v\n", err)
+		panic(err)
 	}
 
-	iPacket, err = protocol.ParsePacket(packetBytes)
+	newIPacket, err := protocol.ParsePacket(byteArray)
 	if err != nil {
-		log.Fatalf("Error while converting bytes to IPacket: %v\n", err)
+		panic(err)
 	}
 
-	fmt.Printf("Packet: %v\n", packetBytes)
-	fmt.Printf("IPacket: %v\n", iPacket)
+	var value interface{}
+	value, err = protocol.GetValue[int32](newIPacket, 1)
+	if err != nil {
+		panic(err)
+	}
 
+	if v, ok := value.(int32); ok {
+		fmt.Println(v)
+	} else {
+		panic(fmt.Errorf("value has another type: %T", v))
+	}
 }

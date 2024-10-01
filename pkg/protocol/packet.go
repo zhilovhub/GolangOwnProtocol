@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"slices"
 )
 
 type IPacket struct {
 	PacketType    byte
 	PacketSubType byte
-	Fields        []IPacketField
+	Fields        []*IPacketField
 }
 
 type IPacketField struct {
@@ -61,12 +62,13 @@ func ParsePacket(b []byte) (*IPacket, error) {
 			fieldContents = fieldsBytes[:fieldSize]
 		}
 
-		iPacket.Fields = append(iPacket.Fields, IPacketField{
+		iPacket.Fields = append(iPacket.Fields, &IPacketField{
 			FieldId:       fieldId,
 			FieldSize:     fieldSize,
 			FieldContents: fieldContents,
 		})
-		fieldsBytes = fieldContents[2+fieldSize:]
+
+		fieldsBytes = fieldsBytes[2+fieldSize:]
 	}
 	return iPacket, nil
 }
@@ -75,7 +77,7 @@ func ParsePacket(b []byte) (*IPacket, error) {
 func (p *IPacket) GetField(fieldId byte) *IPacketField {
 	for _, field := range p.Fields {
 		if field.FieldId == fieldId {
-			return &field
+			return field
 		}
 	}
 	return nil
@@ -94,7 +96,7 @@ func (p *IPacket) ToPacket() ([]byte, error) {
 		return nil, err
 	}
 
-	slices.SortFunc(p.Fields, func(a, b IPacketField) int {
+	slices.SortFunc(p.Fields, func(a, b *IPacketField) int {
 		if a.FieldId < b.FieldId {
 			return -1
 		}
@@ -113,8 +115,46 @@ func (p *IPacket) ToPacket() ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
+// Returns the value of a field
+func GetValue[T any](p *IPacket, fieldId byte) (T, error) {
+	field := p.GetField(fieldId)
+	if field == nil {
+		return *new(T), fmt.Errorf("field with FieldId = %d does not exist", fieldId)
+	}
+
+	value, err := byteArrayToFixedObject[T](field.FieldContents)
+	return value, err
+}
+
+// Sets the value to a field
+func SetValue[T any](p *IPacket, fieldId byte, value T) error {
+	field := p.GetField(fieldId)
+
+	if field == nil {
+		field = &IPacketField{
+			FieldId: fieldId,
+		}
+		p.Fields = append(p.Fields, field)
+	}
+
+	byteArray, err := fixedObjectToByteArray(value)
+	if err != nil {
+		return err
+	}
+
+	byteArrayLength := len(byteArray)
+	if byteArrayLength > math.MaxUint8 {
+		return fmt.Errorf("value can't have size more than 255 bytes: now it has %d", len(byteArray))
+	}
+
+	field.FieldSize = byte(byteArrayLength)
+	field.FieldContents = byteArray
+
+	return nil
+}
+
 // Converts an object with fixed size to []byte
-func FixedObjectToByteArray(value any) ([]byte, error) {
+func fixedObjectToByteArray(value any) ([]byte, error) {
 	buffer := new(bytes.Buffer)
 	err := binary.Write(buffer, binary.BigEndian, value)
 	if err != nil {
@@ -125,7 +165,7 @@ func FixedObjectToByteArray(value any) ([]byte, error) {
 }
 
 // Converts []byte to an object with fixed size of type T
-func ByteArrayToFixedObject[T any](byteArray []byte) (T, error) {
+func byteArrayToFixedObject[T any](byteArray []byte) (T, error) {
 	var object T
 	err := binary.Read(bytes.NewReader(byteArray), binary.BigEndian, &object)
 	return object, err
