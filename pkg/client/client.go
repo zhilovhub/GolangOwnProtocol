@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func main() {
+func Client() {
 	// Client
 	conn, err := net.Dial("tcp", "localhost:8080")
 	if err != nil {
