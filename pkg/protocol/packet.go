@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"slices"
 )
@@ -95,4 +96,20 @@ func (p *IPacket) ToPacket() ([]byte, error) {
 
 	buffer.Write([]byte{0x00, 0xFF})
 	return buffer.Bytes(), nil
+}
+
+func FixedObjectToByteArray(value any) ([]byte, error) {
+	buffer := new(bytes.Buffer)
+	err := binary.Write(buffer, binary.BigEndian, value)
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
+}
+
+func ByteArrayToFixedObject[T any](byteArray []byte) (T, error) {
+	var object T
+	err := binary.Read(bytes.NewReader(byteArray), binary.BigEndian, &object)
+	return object, err
 }
