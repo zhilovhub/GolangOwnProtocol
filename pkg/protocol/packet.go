@@ -71,6 +71,15 @@ func ParsePacket(b []byte) (*IPacket, error) {
 	return iPacket, nil
 }
 
+func (p *IPacket) GetField(fieldId byte) *IPacketField {
+	for _, field := range p.Fields {
+		if field.FieldId == fieldId {
+			return &field
+		}
+	}
+	return nil
+}
+
 // Convers IPacket to Packet in byte slice presentation
 func (p *IPacket) ToPacket() ([]byte, error) {
 	buffer := new(bytes.Buffer)
@@ -98,6 +107,7 @@ func (p *IPacket) ToPacket() ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
+// Converts an object with fixed size to []byte
 func FixedObjectToByteArray(value any) ([]byte, error) {
 	buffer := new(bytes.Buffer)
 	err := binary.Write(buffer, binary.BigEndian, value)
@@ -108,6 +118,7 @@ func FixedObjectToByteArray(value any) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
+// Converts []byte to an object with fixed size of type T
 func ByteArrayToFixedObject[T any](byteArray []byte) (T, error) {
 	var object T
 	err := binary.Read(bytes.NewReader(byteArray), binary.BigEndian, &object)
