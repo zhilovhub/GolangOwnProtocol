@@ -7,11 +7,18 @@ import (
 )
 
 func main() {
-	packet := protocol.CreateIPacket(2, 3)
-	packetBytes, err := packet.ToPacket()
+	iPacket := protocol.CreateIPacket(2, 3)
+	packetBytes, err := iPacket.ToPacket()
 	if err != nil {
-		log.Fatalf("Error while converting packet to bytes: %v\n", err)
+		log.Fatalf("Error while converting IPacket to bytes: %v\n", err)
 	}
 
-	fmt.Println(packetBytes)
+	iPacket, err = protocol.ParsePacket(packetBytes)
+	if err != nil {
+		log.Fatalf("Error while converting bytes to IPacket: %v\n", err)
+	}
+
+	fmt.Printf("Packet: %v\n", packetBytes)
+	fmt.Printf("IPacket: %v\n", iPacket)
+
 }

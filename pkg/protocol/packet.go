@@ -47,6 +47,26 @@ func ParsePacket(b []byte) (*IPacket, error) {
 
 	iPacket := CreateIPacket(packetType, packetSubType)
 
+	fieldsBytes := b[5:]
+	for {
+		if len(fieldsBytes) == 2 {
+			break
+		}
+		fieldId := fieldsBytes[0]
+		fieldSize := fieldsBytes[1]
+
+		var fieldContents []byte
+		if fieldSize != 0 {
+			fieldContents = fieldsBytes[:fieldSize]
+		}
+
+		iPacket.Fields = append(iPacket.Fields, IPacketField{
+			FieldId:       fieldId,
+			FieldSize:     fieldSize,
+			FieldContents: fieldContents,
+		})
+		fieldsBytes = fieldContents[2+fieldSize:]
+	}
 	return iPacket, nil
 }
 
