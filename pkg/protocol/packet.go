@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"bytes"
+	"fmt"
 	"slices"
 )
 
@@ -17,6 +18,7 @@ type IPacketField struct {
 	FieldContents []byte
 }
 
+// Creates IPacket with parameters
 func CreateIPacket(packetType, packetSubType byte) *IPacket {
 	return &IPacket{
 		PacketType:    packetType,
@@ -24,6 +26,31 @@ func CreateIPacket(packetType, packetSubType byte) *IPacket {
 	}
 }
 
+// Parses byte array to IPacket structure
+func ParsePacket(b []byte) (*IPacket, error) {
+	bytesLength := len(b)
+	if bytesLength < 7 {
+		return nil, fmt.Errorf("bytes length is less than 7 bytes: %d", bytesLength)
+	}
+
+	if b[0] != 0xDD || b[1] != 0xEF || b[2] != 0xDD {
+		return nil, fmt.Errorf("bytes has wrong headers")
+	}
+
+	var endIndex = bytesLength - 1
+	if b[endIndex-1] != 0x00 || b[endIndex] != 0xFF {
+		return nil, fmt.Errorf("bytes has wrong end bytes")
+	}
+
+	packetType := b[3]
+	packetSubType := b[4]
+
+	iPacket := CreateIPacket(packetType, packetSubType)
+
+	return iPacket, nil
+}
+
+// Convers IPacket to Packet in byte slice presentation
 func (p *IPacket) ToPacket() ([]byte, error) {
 	buffer := new(bytes.Buffer)
 	_, err := buffer.Write([]byte{0xDD, 0xEF, 0xDD, p.PacketType, p.PacketSubType})
