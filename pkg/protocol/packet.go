@@ -71,6 +71,7 @@ func ParsePacket(b []byte) (*IPacket, error) {
 	return iPacket, nil
 }
 
+// Returns Field with given fieldId or nil if there is no such a field
 func (p *IPacket) GetField(fieldId byte) *IPacketField {
 	for _, field := range p.Fields {
 		if field.FieldId == fieldId {
@@ -78,6 +79,11 @@ func (p *IPacket) GetField(fieldId byte) *IPacketField {
 		}
 	}
 	return nil
+}
+
+// Check if field exists
+func (p *IPacket) HasField(fieldId byte) bool {
+	return p.GetField(fieldId) != nil
 }
 
 // Convers IPacket to Packet in byte slice presentation
