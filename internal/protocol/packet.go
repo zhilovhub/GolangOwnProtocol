@@ -8,6 +8,11 @@ import (
 	"slices"
 )
 
+const (
+	Unknown = iota
+	Handshake
+)
+
 type IPacket struct {
 	PacketType    byte
 	PacketSubType byte

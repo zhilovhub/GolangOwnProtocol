@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"version1/pkg/protocol"
+	"version1/internal/protocol"
 )
 
 func main() {
